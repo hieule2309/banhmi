@@ -25,6 +25,8 @@ interface BanhMiComboLandingProps {
   freeshipCode?: string
   /** Callback when user clicks any CTA button */
   onOrderClick?: () => void
+  /** Callback when user clicks 'Xem Bảng Đại Gia' button */
+  onOpenLeaderboard?: () => void
 }
 
 /**
@@ -47,6 +49,7 @@ export function BanhMiComboLanding({
   comboStartingPrice = '19.000đ',
   freeshipCode = 'FREESHIPCOMBO',
   onOrderClick,
+  onOpenLeaderboard,
 }: BanhMiComboLandingProps) {
   // ── State 1: Sticky Top Bar visibility
   const [showStickyBar, setShowStickyBar] = useState(false)
@@ -226,12 +229,12 @@ export function BanhMiComboLanding({
                 </span>
               </div>
 
-              {/* PROMINENT CALL TO ACTION (CTA) BUTTON */}
-              <div className="pt-1 flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3.5">
+              {/* PROMINENT CALL TO ACTION (CTA) BUTTONS */}
+              <div className="pt-1 flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3">
                 <button
                   type="button"
                   onClick={handleScrollToMenu}
-                  className="w-full sm:w-auto group relative inline-flex items-center justify-center gap-3 px-8 py-4 rounded-2xl bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 hover:from-amber-600 hover:via-orange-600 hover:to-rose-600 text-white font-black text-base sm:text-lg shadow-xl shadow-orange-500/25 hover:shadow-orange-500/40 hover:scale-[1.03] active:scale-[0.98] transition-all duration-200 cursor-pointer overflow-hidden"
+                  className="w-full sm:w-auto group relative inline-flex items-center justify-center gap-2.5 px-7 py-3.5 rounded-2xl bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 hover:from-amber-600 hover:via-orange-600 hover:to-rose-600 text-white font-black text-base shadow-xl shadow-orange-500/25 hover:shadow-orange-500/40 hover:scale-[1.03] active:scale-[0.98] transition-all duration-200 cursor-pointer overflow-hidden"
                 >
                   {/* Shimmer sweep animation */}
                   <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full bg-gradient-to-r from-transparent via-white/25 to-transparent transition-transform duration-1000 ease-out" />
@@ -241,10 +244,15 @@ export function BanhMiComboLanding({
                   <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
                 </button>
 
-                <div className="text-xs text-muted-foreground text-center sm:text-left">
-                  <span className="font-bold text-foreground block">Chỉ từ {comboStartingPrice}</span>
-                  <span>Giao hàng tận bàn với tất cả đơn hàng</span>
-                </div>
+                {/* 👑 Xem Bảng Đại Gia Gold CTA Button */}
+                <button
+                  type="button"
+                  onClick={onOpenLeaderboard}
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-500 hover:via-yellow-500 hover:to-amber-600 text-amber-950 font-black text-base shadow-lg shadow-amber-400/20 hover:shadow-amber-400/35 hover:scale-[1.03] active:scale-[0.98] border border-amber-300/60 transition-all duration-200 cursor-pointer"
+                >
+                  <span className="text-lg">👑</span>
+                  <span>Xem Bảng Đại Gia</span>
+                </button>
               </div>
             </div>
 

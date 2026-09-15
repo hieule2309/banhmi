@@ -12,6 +12,8 @@ import { DebtSearchSection } from '@/components/debt-search-section'
 import { GoldenBoard } from '@/components/golden-board'
 import { Footer } from '@/components/footer'
 import { ChatBot } from '@/components/chatbot'
+import { TopMarquee } from '@/components/top-marquee'
+import { LeaderboardModal } from '@/components/leaderboard-modal'
 import type { MenuItem, Topping } from '@/lib/types'
 import { UtensilsCrossed, Trophy, Search } from 'lucide-react'
 
@@ -26,6 +28,7 @@ const TABS: { id: Tab; label: string; icon: React.ReactNode; emoji: string }[] =
 function BanhMiApp() {
   const [cartOpen, setCartOpen] = useState(false)
   const [checkoutOpen, setCheckoutOpen] = useState(false)
+  const [leaderboardOpen, setLeaderboardOpen] = useState(false)
   const [buyNowItem, setBuyNowItem] = useState<BuyNowItem | null>(null)
   const [activeTab, setActiveTab] = useState<Tab>('menu')
 
@@ -48,6 +51,9 @@ function BanhMiApp() {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
+      {/* 🏆 Thanh Marquee Chữ Chạy Ngang Trên Cùng */}
+      <TopMarquee />
+
       <Header onCartClick={() => setCartOpen(true)} />
 
       <main className="flex-1">
@@ -62,6 +68,7 @@ function BanhMiApp() {
               menuEl.scrollIntoView({ behavior: 'smooth' })
             }
           }}
+          onOpenLeaderboard={() => setLeaderboardOpen(true)}
         />
 
         {/* ── Tab Bar ── */}
@@ -121,6 +128,12 @@ function BanhMiApp() {
         open={checkoutOpen}
         onClose={handleCloseCheckout}
         buyNowItem={buyNowItem}
+      />
+
+      {/* 👑 Modal Xem Bảng Đại Gia */}
+      <LeaderboardModal
+        isOpen={leaderboardOpen}
+        onClose={() => setLeaderboardOpen(false)}
       />
     </div>
   )
