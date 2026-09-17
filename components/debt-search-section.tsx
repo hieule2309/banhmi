@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect } from 'react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -65,31 +65,15 @@ export function DebtSearchSection() {
     fetchCustomers()
   }, [])
 
-  // Filter matching customers as user types or searches
-  const filteredCustomers = useMemo(() => {
-    const cleanQuery = removeAccents(query)
-    if (!cleanQuery) return []
-    return customers.filter((c) => {
-      const cleanName = removeAccents(c.name)
-      const cleanPhone = c.phone ? removeAccents(c.phone) : ''
-      return cleanName.includes(cleanQuery) || cleanPhone.includes(cleanQuery)
-    })
-  }, [query, customers])
-
+  // Tìm kiếm chính xác (Exact Match hoặc Case-insensitive Match / không phân biệt dấu tiếng Việt)
   const handleSearch = (e?: React.FormEvent) => {
     if (e) e.preventDefault()
-    setSearched(true)
-    if (filteredCustomers.length > 0) {
-      setSelectedCustomer(filteredCustomers[0])
-    } else {
-      setSelectedCustomer(null)
-    }
-  }
+    const cleanQuery = removeAccents(query)
+    if (!cleanQuery) return
 
-  const handleSelectCustomer = (customer: Customer) => {
-    setSelectedCustomer(customer)
-    setQuery(customer.name)
     setSearched(true)
+    const match = customers.find((c) => removeAccents(c.name) === cleanQuery)
+    setSelectedCustomer(match || null)
   }
 
   const handleClear = () => {
@@ -146,22 +130,27 @@ export function DebtSearchSection() {
               </label>
               <div className="flex flex-col sm:flex-row items-center gap-2">
                 <div className="relative flex-1 w-full">
-                  <Search className="w-5 h-5 absolute left-3.5 top-3.5 text-muted-foreground" />
+                  <Search className="w-5 h-5 absolute left-3.5 top-3.5 text-muted-foreground pointer-events-none" />
                   <Input
                     type="text"
+                    autoComplete="off"
                     value={query}
                     onChange={(e) => {
                       setQuery(e.target.value)
-                      setSearched(false)
+                      if (searched) {
+                        setSearched(false)
+                        setSelectedCustomer(null)
+                      }
                     }}
-                    placeholder="Nhập tên của bạn (ví dụ: Hieudeptrai, Hieusanmay, Hieubanhmi)..."
+                    placeholder="Nhập tên của bạn (ví dụ: Hieu, Hieudeptrai, Hieubanhmi)..."
                     className="pl-11 pr-10 py-6 text-base rounded-xl border-border bg-background"
                   />
                   {query && (
                     <button
                       type="button"
                       onClick={handleClear}
-                      className="absolute right-3 top-3.5 text-muted-foreground hover:text-foreground p-0.5 rounded-full"
+                      aria-label="Xóa nội dung"
+                      className="absolute right-3 top-3.5 text-muted-foreground hover:text-foreground p-0.5 rounded-full cursor-pointer"
                     >
                       <X className="w-5 h-5" />
                     </button>
@@ -170,7 +159,7 @@ export function DebtSearchSection() {
                 <Button
                   type="submit"
                   disabled={!query.trim() || isLoading}
-                  className="w-full sm:w-auto px-8 py-6 text-base font-bold rounded-xl gap-2 shadow-md shrink-0"
+                  className="w-full sm:w-auto px-8 py-6 text-base font-bold rounded-xl gap-2 shadow-md shrink-0 cursor-pointer"
                 >
                   {isLoading ? (
                     <RefreshCw className="w-5 h-5 animate-spin" />
@@ -182,43 +171,19 @@ export function DebtSearchSection() {
               </div>
             </form>
 
-            {/* Matching suggestions list while typing */}
-            {query.trim() && !searched && filteredCustomers.length > 0 && (
-              <div className="border border-border/80 rounded-xl bg-background divide-y divide-border overflow-hidden shadow-xs">
-                <div className="px-4 py-2 bg-muted/50 text-xs font-bold text-muted-foreground">
-                  Gợi ý tên phù hợp ({filteredCustomers.length}):
-                </div>
-                {filteredCustomers.map((c) => (
-                  <button
-                    key={c.id}
-                    onClick={() => handleSelectCustomer(c)}
-                    className="w-full px-4 py-3 text-left hover:bg-primary/5 flex items-center justify-between transition-colors"
-                  >
-                    <span className="font-bold text-foreground">{c.name}</span>
-                    <Badge
-                      variant={c.debt > 0 ? 'destructive' : 'outline'}
-                      className="text-xs font-semibold"
-                    >
-                      {c.debt > 0 ? `Còn nợ: ${formatCurrency(c.debt)}` : 'Hết nợ'}
-                    </Badge>
-                  </button>
-                ))}
-              </div>
-            )}
-
             {/* Search Results Display */}
             {searched && (
-              <div className="pt-2">
+              <div className="pt-2 animate-in fade-in-50 duration-300">
                 {!selectedCustomer ? (
                   <div className="p-8 text-center rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-900 dark:text-amber-200 space-y-2">
                     <AlertCircle className="w-10 h-10 mx-auto text-amber-600 dark:text-amber-400" />
-                    <h4 className="font-bold text-base">Không tìm thấy thông tin công nợ</h4>
+                    <h4 className="font-bold text-base">Không tìm thấy thông tin công nợ cho tên này. Vui lòng kiểm tra lại!</h4>
                     <p className="text-xs text-muted-foreground max-w-md mx-auto">
-                      Không tìm thấy tên &quot;{query}&quot; trong hệ thống công nợ. Vui lòng kiểm tra lại cách viết tên hoặc liên hệ chủ quán!
+                      Không tìm thấy tên &quot;{query}&quot; trong hệ thống công nợ. Vui lòng kiểm tra lại chính xác cách viết tên hoặc liên hệ chủ quán!
                     </p>
                   </div>
                 ) : selectedCustomer.debt <= 0 ? (
-                  <div className="p-8 text-center rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-900 dark:text-emerald-200 space-y-3">
+                  <div className="p-8 text-center rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-900 dark:text-emerald-200 space-y-3 shadow-sm">
                     <CheckCircle2 className="w-12 h-12 mx-auto text-emerald-600 dark:text-emerald-400" />
                     <div>
                       <h4 className="font-extrabold text-xl">Chào {selectedCustomer.name}!</h4>
@@ -251,8 +216,9 @@ export function DebtSearchSection() {
                           <Button
                             variant="outline"
                             size="sm"
+                            type="button"
                             onClick={() => copyToClipboard(String(selectedCustomer.debt), 'debt')}
-                            className="h-8 text-xs font-bold gap-1 border-rose-300 text-rose-700 hover:bg-rose-100"
+                            className="h-8 text-xs font-bold gap-1 border-rose-300 text-rose-700 hover:bg-rose-100 dark:hover:bg-rose-950/50 cursor-pointer"
                           >
                             {copiedField === 'debt' ? (
                               <Check className="w-3.5 h-3.5 text-emerald-600" />
@@ -278,14 +244,15 @@ export function DebtSearchSection() {
                             <CreditCard className="w-4 h-4 text-primary" /> Số tài khoản:
                           </span>
                           <button
+                            type="button"
                             onClick={() => copyToClipboard(ACCOUNT_NO, 'stk')}
-                            className="font-extrabold text-primary hover:underline flex items-center gap-1"
+                            className="font-extrabold text-primary hover:underline flex items-center gap-1 cursor-pointer"
                           >
                             {ACCOUNT_NO}
                             {copiedField === 'stk' ? (
                               <Check className="w-3.5 h-3.5 text-emerald-600" />
                             ) : (
-                              <Copy className="w-3 h-3 text-muted-foreground" />
+                              <Copy className="w-3.5 h-3.5 text-muted-foreground" />
                             )}
                           </button>
                         </div>
@@ -298,14 +265,15 @@ export function DebtSearchSection() {
                         <div className="flex items-center justify-between py-1.5">
                           <span className="text-muted-foreground">Nội dung chuyển khoản:</span>
                           <button
+                            type="button"
                             onClick={() => copyToClipboard(`Thanh toan cong no ${selectedCustomer.name}`, 'memo')}
-                            className="font-bold text-foreground hover:underline flex items-center gap-1"
+                            className="font-bold text-foreground hover:underline flex items-center gap-1 cursor-pointer"
                           >
                             Thanh toan cong no {selectedCustomer.name}
                             {copiedField === 'memo' ? (
                               <Check className="w-3.5 h-3.5 text-emerald-600" />
                             ) : (
-                              <Copy className="w-3 h-3 text-muted-foreground" />
+                              <Copy className="w-3.5 h-3.5 text-muted-foreground" />
                             )}
                           </button>
                         </div>
@@ -319,7 +287,7 @@ export function DebtSearchSection() {
                       </div>
                       
                       <div className="bg-white p-3 rounded-2xl shadow-md border border-border max-w-[260px]">
-                        {/* eslint-disable-next-html-link */}
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
                           src={getQrUrl(selectedCustomer.debt, selectedCustomer.name)}
                           alt={`Mã QR thanh toán công nợ cho ${selectedCustomer.name}`}
@@ -328,8 +296,9 @@ export function DebtSearchSection() {
                         />
                       </div>
 
-                      <p className="text-[11px] text-muted-foreground text-center italic">
+                      <p className="text-[11px] text-muted-foreground text-center italic leading-relaxed">
                         * Mã QR tự động điền số tiền {formatCurrency(selectedCustomer.debt)} &amp; nội dung chuyển khoản.
+                        <br />
                         * Sau khi chuyển khoản mọi người về chatwork sẽ có bot thông báo thành công ạ.
                       </p>
                     </div>
