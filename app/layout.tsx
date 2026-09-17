@@ -8,9 +8,40 @@ const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: 'Bánh Mì Hieudeptrai - Đặt Hàng Online',
-  description: 'Đặt bánh mì tươi ngon, giao hàng nhanh chóng. Bánh mì chả cá, bánh mì trứng và nhiều loại khác.',
-  generator: 'v0.app',
+  title: 'Bánh Mì Chả Cá Hieudeptrai | Dai Ngon, Nóng Hổi Chuẩn Vị',
+  description: 'Thưởng thức bánh mì chả cá Hieudeptrai với chả cá biển dai ngọt, vỏ giòn rụm và nước sốt tỏi ớt đặc biệt. Đặt hàng ngay nhận ưu đãi!',
+  keywords: [
+    'bánh mì chả cá',
+    'bánh mì Hieudeptrai',
+    'bánh mì chả cá Hieudeptrai',
+    'đặt bánh mì online',
+    'bánh mì anh trai',
+    'banhmianhtrai',
+    'Hieudeptrai',
+    'bánh mì anh trai',
+  ],
+  generator: 'Next.js',
+  openGraph: {
+    type: 'website',
+    locale: 'vi_VN',
+    title: 'Bánh Mì Chả Cá Hieudeptrai | Dai Ngon, Nóng Hổi Chuẩn Vị',
+    description: 'Thưởng thức bánh mì chả cá Hieudeptrai với chả cá biển dai ngọt, vỏ giòn rụm và nước sốt tỏi ớt đặc biệt. Đặt hàng ngay nhận ưu đãi!',
+    siteName: 'Bánh Mì Chả Cá Hieudeptrai',
+    images: [
+      {
+        url: '/banner_combo.png',
+        width: 1376,
+        height: 768,
+        alt: 'Bánh mì chả cá Hieudeptrai nóng giòn thơm ngon',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Bánh Mì Chả Cá Hieudeptrai | Dai Ngon, Nóng Hổi Chuẩn Vị',
+    description: 'Thưởng thức bánh mì chả cá Hieudeptrai với chả cá biển dai ngọt, vỏ giòn rụm và nước sốt tỏi ớt đặc biệt.',
+    images: ['/banner_combo.png'],
+  },
   icons: {
     icon: [
       {
@@ -36,7 +67,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="vi" suppressHydrationWarning>
       <body className="font-sans antialiased" suppressHydrationWarning>
         {children}
         <Analytics />

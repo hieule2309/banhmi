@@ -20,10 +20,11 @@ export function HeroSection() {
               Đang mở cửa • 6:00 – 21:00
             </div>
 
-            <h1 className="text-2xl md:text-3xl font-extrabold text-foreground leading-tight">
+            {/* SEO: h1 duy nhất nằm ở BanhMiComboLanding. Component này dùng p có role heading */}
+            <p className="text-2xl md:text-3xl font-extrabold text-foreground leading-tight" role="heading" aria-level={2}>
               Bánh Mì Hieudeptrai
               <span className="text-primary"> – Ngon Tuyệt</span>
-            </h1>
+            </p>
 
             <p className="text-sm text-muted-foreground max-w-sm leading-relaxed">
               Bánh mì tươi giòn kết hợp cà phê phin thơm ngon – bữa sáng hoàn hảo mỗi ngày.

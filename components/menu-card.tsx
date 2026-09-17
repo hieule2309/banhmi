@@ -34,7 +34,7 @@ export function MenuCard({ item, onAddClick, onBuyNowClick, isDrink = false }: M
         {item.image ? (
           <img
             src={item.image}
-            alt={item.name}
+            alt={isDrink ? item.name : `${item.name} Hieudeptrai – bánh mì chả cá ngon`}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           />
         ) : (

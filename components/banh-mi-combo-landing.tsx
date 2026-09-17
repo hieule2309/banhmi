@@ -203,9 +203,9 @@ export function BanhMiComboLanding({
                 <span>COMBO SIÊU TIẾT KIỆM • BÁN CHẠY NHẤT</span>
               </div>
 
-              {/* Main Headline */}
+              {/* Main Headline - H1 duy nhất của trang, chứa từ khoá SEO chính */}
               <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-foreground tracking-tight leading-[1.15]">
-                Combo <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-600 via-orange-500 to-rose-600">Bánh Mì Giòn Rụm</span> + Nước Mát Lạnh
+                Combo <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-600 via-orange-500 to-rose-600">Bánh Mì Chả Cá Hieudeptrai</span> Giòn Rụm + Nước Mát Lạnh
               </h1>
 
               {/* Sub-headline */}
@@ -267,9 +267,10 @@ export function BanhMiComboLanding({
                   <div className="relative w-full aspect-[1376/768] bg-muted/20">
                     <Image
                       src={bannerSrc}
-                      alt="Combo Bánh Mì và Nước Uống Thơm Ngon"
+                      alt="Bánh mì chả cá Hieudeptrai nóng giòn thơm ngon"
                       fill
                       priority
+                      loading="eager"
                       sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 600px"
                       className="object-contain w-full h-full transition-transform duration-500 group-hover:scale-102"
                     />
