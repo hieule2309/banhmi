@@ -38,9 +38,22 @@ export function CheckoutDialog({ open, onClose, buyNowItem }: CheckoutDialogProp
   const [isChecking, setIsChecking] = useState(true)
   const [orderedDates, setOrderedDates] = useState<string[]>([])
   const [selectedDates, setSelectedDates] = useState<string[]>([])
+  const [isAdmin, setIsAdmin] = useState(false)
   const [formData, setFormData] = useState({
     name: '',
   })
+
+  // Kiểm tra xem người dùng có đang ở chế độ admin (đã đăng nhập trang admin) không
+  const getAdminHeaders = (): Record<string, string> => {
+    if (typeof window === 'undefined') return {}
+    const adminSession = sessionStorage.getItem('admin_auth')
+    const adminLocal = localStorage.getItem('admin_auth')
+    const cookieMatch = document.cookie.split(';').some(c => c.trim().startsWith('admin_auth=true'))
+    if (adminSession === 'true' || adminLocal === 'true' || cookieMatch) {
+      return { 'x-admin-auth': 'true' }
+    }
+    return {}
+  }
 
   // Danh sách các ngày làm việc (bỏ qua T7, CN)
   const upcomingDays = getUpcomingWorkingDays(7)
@@ -66,17 +79,20 @@ export function CheckoutDialog({ open, onClose, buyNowItem }: CheckoutDialogProp
   useEffect(() => {
     if (open) {
       setIsChecking(true)
-      fetch('/api/orders/check')
+      const adminHeaders = getAdminHeaders()
+      const adminMode = Object.keys(adminHeaders).length > 0
+      setIsAdmin(adminMode)
+
+      fetch('/api/orders/check', { headers: adminHeaders })
         .then((res) => res.json())
         .then((data) => {
-          const booked: string[] = data.orderedDates || []
+          // Admin: không block ngày đã đặt, khách thường mới block
+          const booked: string[] = adminMode ? [] : (data.orderedDates || [])
           setOrderedDates(booked)
 
           if (isBuyNow) {
-            // Đơn hàng Mua Ngay mặc định chọn ngày làm việc tiếp theo
             setSelectedDates([nextWorkingDay.dateStr])
           } else {
-            // Đơn hàng đặt trước thông thường chọn ngày khả dụng đầu tiên
             const available = upcomingDays.filter((d) => !booked.includes(d.dateStr))
             if (available.length > 0) {
               setSelectedDates([available[0].dateStr])
@@ -132,10 +148,12 @@ export function CheckoutDialog({ open, onClose, buyNowItem }: CheckoutDialogProp
     setError(null)
 
     try {
+      const adminHeaders = getAdminHeaders()
       const response = await fetch('/api/orders', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          ...adminHeaders,
         },
         body: JSON.stringify({
           customerName: formData.name,
@@ -310,9 +328,16 @@ export function CheckoutDialog({ open, onClose, buyNowItem }: CheckoutDialogProp
                       <Calendar className="w-4 h-4 text-primary" />
                       Chọn ngày nhận đơn (Chỉ T2 - T6):
                     </Label>
-                    <span className="text-xs text-muted-foreground">
-                      Đã chọn: <strong className="text-primary font-bold">{selectedDates.length}</strong> ngày
-                    </span>
+                    <div className="flex items-center gap-2">
+                      {isAdmin && (
+                        <Badge className="text-[10px] py-0 px-1.5 bg-primary/20 text-primary border-primary/30">
+                          🔑 Admin
+                        </Badge>
+                      )}
+                      <span className="text-xs text-muted-foreground">
+                        Đã chọn: <strong className="text-primary font-bold">{selectedDates.length}</strong> ngày
+                      </span>
+                    </div>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -367,7 +392,9 @@ export function CheckoutDialog({ open, onClose, buyNowItem }: CheckoutDialogProp
 
                   <p className="text-[11px] text-muted-foreground flex items-center gap-1 pt-1">
                     <Info className="w-3.5 h-3.5 shrink-0 text-muted-foreground" />
-                    Đã tự động lọc bỏ Thứ 7 & Chủ Nhật trong lịch đặt hàng.
+                    {isAdmin
+                      ? '🔑 Chế độ Admin: Có thể đặt nhiều đơn hàng trong cùng một ngày.'
+                      : 'Đã tự động lọc bỏ Thứ 7 & Chủ Nhật trong lịch đặt hàng.'}
                   </p>
                 </div>
               )}

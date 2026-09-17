@@ -11,6 +11,12 @@ export function getTodayString(): string {
   return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
 }
 
+export function isRequestAdmin(request: NextRequest): boolean {
+  const adminCookie = request.cookies.get('admin_auth')?.value
+  const adminHeader = request.headers.get('x-admin-auth')
+  return adminCookie === 'true' || adminHeader === 'true'
+}
+
 export function parseUserOrdersCookie(request: NextRequest): UserCookieOrder[] {
   try {
     const raw = request.cookies.get('user_orders')?.value

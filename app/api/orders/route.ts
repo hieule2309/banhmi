@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createOrder, createOrderItems, getAllOrders } from '@/lib/db'
-import { getCleanUserOrders, setUserOrdersCookie, getTodayString, UserCookieOrder } from '@/lib/order-cookies'
+import { getCleanUserOrders, setUserOrdersCookie, getTodayString, UserCookieOrder, isRequestAdmin } from '@/lib/order-cookies'
 import { z } from 'zod'
 
 // Validation schema for order
@@ -39,6 +39,9 @@ export async function POST(request: NextRequest) {
     const todayStr = getTodayString()
     const targetDates = inputDates && inputDates.length > 0 ? inputDates : [todayStr]
 
+    // Kiểm tra quyền Admin
+    const isAdmin = isRequestAdmin(request)
+
     // Lấy và dọn dẹp các đơn hàng hiện có của thiết bị từ cookie
     const { activeOrders } = await getCleanUserOrders(request)
     const existingDates = activeOrders.map(o => o.date)
@@ -60,7 +63,8 @@ export async function POST(request: NextRequest) {
           { status: 400 }
         )
       }
-      if (existingDates.includes(targetDate)) {
+      // Nếu không phải admin và ngày này đã có đơn hàng thì chặn
+      if (!isAdmin && existingDates.includes(targetDate)) {
         return NextResponse.json(
           { error: `Ngày ${targetDate} bạn đã có 1 đơn hàng rồi. Nếu muốn đặt lại, vui lòng hủy đơn hàng cũ của ngày này!` },
           { status: 429 }

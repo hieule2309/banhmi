@@ -45,6 +45,7 @@ import {
   BarChart3,
   Edit3,
   Trash2,
+  LogOut,
 } from 'lucide-react'
 import { CustomerDebtManagement } from '@/components/customer-debt-management'
 import { AddOrderDebtDialog } from '@/components/add-order-debt-dialog'
@@ -222,11 +223,28 @@ export default function AdminTodayOrdersPage() {
     await fetchOrders(selectedDate, true)
   }
 
+  const setAdminAuthStorage = () => {
+    sessionStorage.setItem(SESSION_KEY, 'true')
+    localStorage.setItem(SESSION_KEY, 'true')
+    document.cookie = `${SESSION_KEY}=true; path=/; max-age=2592000; SameSite=Lax`
+  }
+
+  const clearAdminAuthStorage = () => {
+    sessionStorage.removeItem(SESSION_KEY)
+    localStorage.removeItem(SESSION_KEY)
+    document.cookie = `${SESSION_KEY}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax`
+  }
+
   // Check session on mount
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const stored = sessionStorage.getItem(SESSION_KEY)
-      if (stored === 'true') setIsAuthenticated(true)
+      const storedSession = sessionStorage.getItem(SESSION_KEY)
+      const storedLocal = localStorage.getItem(SESSION_KEY)
+      const cookieMatch = document.cookie.split(';').some(c => c.trim().startsWith(`${SESSION_KEY}=true`))
+      if (storedSession === 'true' || storedLocal === 'true' || cookieMatch) {
+        setIsAuthenticated(true)
+        setAdminAuthStorage()
+      }
     }
   }, [])
 
@@ -239,7 +257,7 @@ export default function AdminTodayOrdersPage() {
 
   const handleLogin = () => {
     if (passwordInput === ADMIN_PASSWORD) {
-      sessionStorage.setItem(SESSION_KEY, 'true')
+      setAdminAuthStorage()
       setIsAuthenticated(true)
       setAuthError(false)
     } else {
@@ -249,6 +267,12 @@ export default function AdminTodayOrdersPage() {
       setTimeout(() => setIsShaking(false), 600)
       setTimeout(() => passwordRef.current?.focus(), 100)
     }
+  }
+
+  const handleLogout = () => {
+    clearAdminAuthStorage()
+    setIsAuthenticated(false)
+    setPasswordInput('')
   }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
