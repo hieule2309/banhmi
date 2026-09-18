@@ -29,7 +29,7 @@ export const metadata: Metadata = {
     siteName: 'Bánh Mì Chả Cá Hieudeptrai',
     images: [
       {
-        url: '/banner_combo.png',
+        url: 'https://banhmianhtrai.shop/banner_combo.png',
         width: 1376,
         height: 768,
         alt: 'Bánh mì chả cá Hieudeptrai nóng giòn thơm ngon',
@@ -40,7 +40,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Bánh Mì Chả Cá Hieudeptrai | Dai Ngon, Nóng Hổi Chuẩn Vị',
     description: 'Thưởng thức bánh mì chả cá Hieudeptrai với chả cá biển dai ngọt, vỏ giòn rụm và nước sốt tỏi ớt đặc biệt.',
-    images: ['/banner_combo.png'],
+    images: ['https://banhmianhtrai.shop/banner_combo.png'],
   },
   icons: {
     icon: [
@@ -66,9 +66,21 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'FastFoodRestaurant',
+    name: 'Bánh Mì Chả Cá Hieudeptrai',
+    alternateName: 'Bánh Mì Anh Trai',
+    url: 'https://banhmianhtrai.shop',
+  }
+
   return (
     <html lang="vi" suppressHydrationWarning>
       <body className="font-sans antialiased" suppressHydrationWarning>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
         {children}
         <Analytics />
         <SpeedInsights />
