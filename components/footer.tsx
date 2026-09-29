@@ -28,7 +28,7 @@ export function Footer() {
             <div className="space-y-3">
               <div className="flex items-center gap-3 text-sm text-background/70">
                 <MapPin className="w-4 h-4 text-primary" />
-                <span>Ở đâu còn lâu mới nói</span>
+                <span>79 Đ. Số 6, Bình Đông, Hồ Chí Minh</span>
               </div>
               <div className="flex items-center gap-3 text-sm text-background/70">
                 <Phone className="w-4 h-4 text-primary" />
