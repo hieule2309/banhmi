@@ -78,3 +78,26 @@ export const getUpcomingWorkingDays = (count = 7, fromDate = new Date()): DateOp
 
   return days
 }
+
+/**
+ * Returns today as a DateOption.
+ */
+export const getTodayDateOption = (now = new Date()): DateOption => {
+  const year = now.getFullYear()
+  const month = String(now.getMonth() + 1).padStart(2, '0')
+  const day = String(now.getDate()).padStart(2, '0')
+  const dateStr = `${year}-${month}-${day}`
+
+  const dayMonth = `${day}/${month}`
+  const weekdayName = getVietnameseWeekday(now)
+  const dayLabel = `Hôm nay - ${weekdayName} (${dayMonth})`
+  const fullLabel = `Hôm nay (${weekdayName}, ${dayMonth}/${year})`
+
+  return {
+    dateStr,
+    dayLabel,
+    fullLabel,
+    isToday: true,
+  }
+}
+

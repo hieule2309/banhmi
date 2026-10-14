@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
       const [year, month, day] = targetDate.split('-').map(Number)
       const targetObj = new Date(year, month - 1, day)
       const dayOfWeek = targetObj.getDay()
-      if (dayOfWeek === 0 || dayOfWeek === 6) {
+      if (!isAdmin && (dayOfWeek === 0 || dayOfWeek === 6)) {
         return NextResponse.json(
           { error: `Không nhận đơn hàng vào Thứ 7 và Chủ Nhật (${targetDate})` },
           { status: 400 }
@@ -77,7 +77,7 @@ export async function POST(request: NextRequest) {
 
     // Tạo các đơn hàng riêng biệt cho từng ngày được chọn
     for (const targetDate of targetDates) {
-      const createdAtISO = `${targetDate}T08:00:00.000Z`
+      const createdAtISO = targetDate === todayStr ? new Date().toISOString() : `${targetDate}T08:00:00.000Z`
       const orderId = await createOrder(customerName, total, createdAtISO)
       await createOrderItems(orderId, items)
 

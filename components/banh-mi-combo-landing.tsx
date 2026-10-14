@@ -17,7 +17,7 @@ import {
 } from 'lucide-react'
 
 interface BanhMiComboLandingProps {
-  /** Path to the combo banner image (default: /banner_combo.png) */
+  /** Path to the combo banner image (default: /banner_combo.webp) */
   bannerSrc?: string
   /** Starting price of the combo in VND string/number */
   comboStartingPrice?: string
@@ -45,7 +45,7 @@ function getCookie(name: string): string | null {
 }
 
 export function BanhMiComboLanding({
-  bannerSrc = '/banner_combo.png',
+  bannerSrc = '/banner_combo.webp',
   comboStartingPrice = '19.000đ',
   freeshipCode = 'FREESHIPCOMBO',
   onOrderClick,
@@ -263,7 +263,7 @@ export function BanhMiComboLanding({
                 <div className="absolute -inset-1 bg-gradient-to-r from-amber-500 to-rose-500 rounded-2xl sm:rounded-3xl blur-md opacity-30 group-hover:opacity-50 transition duration-500" />
 
                 <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden border border-amber-500/30 bg-card shadow-2xl">
-                  {/* Aspect Ratio 1376/768 matches exact dimensions of banner_combo.png */}
+                  {/* Aspect Ratio 1376/768 matches exact dimensions of banner_combo.webp */}
                   <div className="relative w-full aspect-[1376/768] bg-muted/20">
                     <Image
                       src={bannerSrc}

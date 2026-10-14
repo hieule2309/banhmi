@@ -9,6 +9,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog'
 import { useCart } from '@/lib/cart-context'
@@ -77,6 +78,9 @@ export function CustomizeDialog({ item, open, onClose, onBuyNow }: CustomizeDial
             {!item.image && <span className="text-2xl">🥖</span>}
             {item.name}
           </DialogTitle>
+          <DialogDescription className="text-xs text-muted-foreground">
+            {item.description || 'Tùy chỉnh topping và ghi chú cho món ăn'}
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6 py-4 overflow-y-auto flex-1">

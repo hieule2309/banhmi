@@ -198,13 +198,14 @@ export default function AdminTodayOrdersPage() {
   const [debtSuccessMessage, setDebtSuccessMessage] = useState<string | null>(null)
   const [orderActionMessage, setOrderActionMessage] = useState<string | null>(null)
 
-  const handleAddDebtSuccess = (updatedCustomer: any, amountAdded: number) => {
+  const handleAddDebtSuccess = async (updatedCustomer: any, amountAdded: number) => {
     setDebtSuccessMessage(
       `Đã cộng thành công ${formatPrice(amountAdded)} vào công nợ của khách hàng "${updatedCustomer.name}". Tổng nợ hiện tại: ${formatPrice(updatedCustomer.debt || 0)}.`
     )
     setTimeout(() => {
       setDebtSuccessMessage(null)
     }, 6000)
+    await fetchOrders(selectedDate, true)
   }
 
   const handleEditOrderSuccess = async (updatedOrder: { id: number; customer_name: string; created_at: string }) => {

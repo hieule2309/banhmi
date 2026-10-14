@@ -6,7 +6,7 @@ export const menuItems: MenuItem[] = [
     name: 'Bánh Mì Đặc Biệt',
     description: 'Bánh mì với chả cá chiên giòn, trứng chiên, dưa leo, rau răm, nước sốt, tương ớt, ớt',
     price: 20000,
-    image: '/1.png',
+    image: '/1.webp',
     category: 'special',
     popular: true,
   },
@@ -15,7 +15,7 @@ export const menuItems: MenuItem[] = [
     name: 'Bánh Mì Chả Cá',
     description: 'Bánh mì nóng hổi với chả cá chiên giòn, dưa leo, rau răm, nước sốt, tương ớt, ớt',
     price: 15000,
-    image: '/2.png',
+    image: '/2.webp',
     category: 'classic',
   },
   {
@@ -23,7 +23,7 @@ export const menuItems: MenuItem[] = [
     name: 'Bánh Mì Trứng Ốp La',
     description: 'Bánh mì nóng hổi với trứng ốp la, dưa leo, rau răm, nước sốt, tương ớt, ớt',
     price: 15000,
-    image: '/3.png',
+    image: '/3.webp',
     category: 'classic',
   },
   {
@@ -31,7 +31,7 @@ export const menuItems: MenuItem[] = [
     name: 'Bánh Mì Siêu Chả Cá',
     description: 'Bánh mì nóng hổi với nhiều chả cá, dưa leo, rau răm, nước sốt, tương ớt, ớt',
     price: 20000,
-    image: '/4.png',
+    image: '/4.webp',
     category: 'classic',
   },
   {
@@ -39,7 +39,7 @@ export const menuItems: MenuItem[] = [
     name: 'Cà Phê Đen',
     description: 'Cà phê đen nguyên chất đậm đà không pha gì cả, thơm ngon, pha phin truyền thống',
     price: 15000,
-    image: '/d1.png',
+    image: '/d1.webp',
     category: 'drink',
     popular: true,
   },
@@ -48,7 +48,7 @@ export const menuItems: MenuItem[] = [
     name: 'Cà Phê Sữa',
     description: 'Cà phê đen nguyên chất đậm đà không pha gì cả kết hợp sữa đặc ngọt ngào, béo ngậy',
     price: 20000,
-    image: '/d2.png',
+    image: '/d2.webp',
     category: 'drink',
   },
   {
@@ -56,7 +56,7 @@ export const menuItems: MenuItem[] = [
     name: 'Trà Tắc',
     description: 'Trà kozi mát lạnh kết hợp tắc (quất) chua ngọt, thêm đường vừa phải siu ngon',
     price: 10000,
-    image: '/d3.png',
+    image: '/d3.webp',
     category: 'drink',
   },
   {
@@ -64,7 +64,7 @@ export const menuItems: MenuItem[] = [
     name: 'Trà đường',
     description: 'Trà kozi mát lạnh kết hợp với sugar, bao ngon, bao đậm chất quê hương chủ shop jet miền tây',
     price: 8000,
-    image: '/d4.png',
+    image: '/d4.webp',
     category: 'drink',
   },
 ]
