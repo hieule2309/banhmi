@@ -17,6 +17,7 @@ import { useCart } from '@/lib/cart-context'
 import { getUpcomingWorkingDays, getNextWorkingDay, getTodayDateOption } from '@/lib/date-utils'
 import type { MenuItem, Topping } from '@/lib/types'
 
+// ── Re-export for convenience (type only, không tạo runtime bundle)
 export interface BuyNowItem {
   menuItem: MenuItem
   selectedToppings: Topping[]

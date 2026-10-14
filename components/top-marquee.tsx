@@ -20,19 +20,13 @@ export function TopMarquee({ refreshInterval = 30000 }: TopMarqueeProps) {
 
   const fetchTop3 = async () => {
     try {
-      // Query completed orders from PostgreSQL public.orders table
       const { data, error } = await supabase
         .from('orders')
         .select('customer_name, total, status')
         .eq('status', 'completed')
         .neq('customer_name', 'Hiếu')
 
-      if (error) {
-        console.error('Lỗi khi lấy dữ liệu phong thần:', error)
-        return
-      }
-
-      if (!data || data.length === 0) {
+      if (error || !data || data.length === 0) {
         setTop3([])
         return
       }
@@ -48,7 +42,6 @@ export function TopMarquee({ refreshInterval = 30000 }: TopMarqueeProps) {
         })
       }
 
-      // Convert to array and sort descending by total_spent
       const sorted = Array.from(customerMap.entries())
         .map(([name, stat]) => ({
           customer_name: name,
@@ -73,52 +66,22 @@ export function TopMarquee({ refreshInterval = 30000 }: TopMarqueeProps) {
   }, [refreshInterval])
 
   // Format currency helper (VND)
-  const formatMoney = (amount: number) => {
-    return new Intl.NumberFormat('vi-VN').format(amount) + 'đ'
-  }
+  const formatMoney = (amount: number) =>
+    new Intl.NumberFormat('vi-VN').format(amount) + 'đ'
 
-  // Emojis for medals
   const medals = ['🥇', '🥈', '🥉']
 
-  // Render top content string
-  const renderMarqueeText = () => {
-    if (loading) {
-      return '🏆 BẢNG PHONG THẦN: Đang tải danh sách đại gia... ⏳'
-    }
-
-    if (top3.length === 0) {
-      return '🏆 BẢNG PHONG THẦN: Chưa có đại gia nào chốt đơn! Hãy là người đầu tiên bứt phá top nào anh em! 🔥'
-    }
-
-    const topStr = top3
-      .map(
-        (c, idx) =>
-          `${medals[idx] || '🎖️'} ${c.customer_name} (${formatMoney(c.total_spent)})`
-      )
-      .join(' | ')
-
-    return `🏆 BẢNG PHONG THẦN: ${topStr} - Đặt ngay để đua top nào anh em! 🔥`
-  }
-
-  const marqueeText = renderMarqueeText()
+  const marqueeText = loading
+    ? '🏆 BẢNG PHONG THẦN: Đang tải danh sách đại gia... ⏳'
+    : top3.length === 0
+      ? '🏆 BẢNG PHONG THẦN: Chưa có đại gia nào chốt đơn! Hãy là người đầu tiên bứt phá top nào anh em! 🔥'
+      : `🏆 BẢNG PHONG THẦN: ${top3
+          .map((c, idx) => `${medals[idx] || '🎖️'} ${c.customer_name} (${formatMoney(c.total_spent)})`)
+          .join(' | ')} - Đặt ngay để đua top nào anh em! 🔥`
 
   return (
+    // CSS animation được định nghĩa trong globals.css (không dùng inline <style>)
     <div className="w-full bg-gradient-to-r from-amber-400 via-orange-400 to-yellow-400 text-orange-950 font-bold text-xs sm:text-sm py-2 px-4 overflow-hidden border-b border-orange-500/30 shadow-xs relative z-50 select-none">
-      <style flex-inline="true">{`
-        @keyframes marquee-scroll {
-          0% { transform: translateX(0%); }
-          100% { transform: translateX(-50%); }
-        }
-        .animate-marquee {
-          display: inline-flex;
-          white-space: nowrap;
-          animation: marquee-scroll 25s linear infinite;
-        }
-        .animate-marquee:hover {
-          animation-play-state: paused;
-        }
-      `}</style>
-
       <div className="flex w-max">
         <div className="animate-marquee flex items-center space-x-12 pr-12">
           <span>{marqueeText}</span>

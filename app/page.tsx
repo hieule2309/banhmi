@@ -1,29 +1,87 @@
 'use client'
 
-import { useState } from 'react'
+import dynamic from 'next/dynamic'
+import { useState, useCallback, useTransition } from 'react'
 import { CartProvider } from '@/lib/cart-context'
 import { Header } from '@/components/header'
-import { HeroSection } from '@/components/hero-section'
 import { BanhMiComboLanding } from '@/components/banh-mi-combo-landing'
-import { MenuSection } from '@/components/menu-section'
-import { CartSidebar } from '@/components/cart-sidebar'
-import { CheckoutDialog, type BuyNowItem } from '@/components/checkout-dialog'
-import { DebtSearchSection } from '@/components/debt-search-section'
-import { GoldenBoard } from '@/components/golden-board'
-import { Footer } from '@/components/footer'
-import { ChatBot } from '@/components/chatbot'
-import { TopMarquee } from '@/components/top-marquee'
-import { LeaderboardModal } from '@/components/leaderboard-modal'
-import type { MenuItem, Topping } from '@/lib/types'
 import { UtensilsCrossed, Trophy, Search } from 'lucide-react'
+import type { MenuItem, Topping } from '@/lib/types'
+import type { BuyNowItem } from '@/components/checkout-dialog'
 
+// ── Above-the-fold: static imports (critical for LCP/FCP)
+// TopMarquee & Header & BanhMiComboLanding đều hiển thị ngay màn hình đầu
+
+// ── Below-the-fold: dynamic imports (tách chunk, giảm TBT)
+const MenuSection = dynamic(
+  () => import('@/components/menu-section').then(m => ({ default: m.MenuSection })),
+  { ssr: false, loading: () => <TabContentSkeleton /> }
+)
+
+const GoldenBoard = dynamic(
+  () => import('@/components/golden-board').then(m => ({ default: m.GoldenBoard })),
+  { ssr: false, loading: () => <TabContentSkeleton /> }
+)
+
+const DebtSearchSection = dynamic(
+  () => import('@/components/debt-search-section').then(m => ({ default: m.DebtSearchSection })),
+  { ssr: false, loading: () => <TabContentSkeleton /> }
+)
+
+// Modals/Sidebars – không render đến khi user trigger
+const CartSidebar = dynamic(
+  () => import('@/components/cart-sidebar').then(m => ({ default: m.CartSidebar })),
+  { ssr: false }
+)
+
+const CheckoutDialog = dynamic(
+  () => import('@/components/checkout-dialog').then(m => ({ default: m.CheckoutDialog })),
+  { ssr: false }
+)
+
+const LeaderboardModal = dynamic(
+  () => import('@/components/leaderboard-modal').then(m => ({ default: m.LeaderboardModal })),
+  { ssr: false }
+)
+
+// ChatBot – floating widget, không cần render sớm
+const ChatBot = dynamic(
+  () => import('@/components/chatbot').then(m => ({ default: m.ChatBot })),
+  { ssr: false }
+)
+
+// Footer – cuối trang
+const Footer = dynamic(
+  () => import('@/components/footer').then(m => ({ default: m.Footer })),
+  { ssr: false }
+)
+
+const TopMarquee = dynamic(
+  () => import('@/components/top-marquee').then(m => ({ default: m.TopMarquee })),
+  { ssr: false }
+)
+
+// ── Tab definitions (static, không gây re-render)
 type Tab = 'menu' | 'golden' | 'debt'
 
 const TABS: { id: Tab; label: string; icon: React.ReactNode; emoji: string }[] = [
-  { id: 'menu',   label: 'Thực Đơn',     icon: <UtensilsCrossed className="w-4 h-4" />, emoji: '🥖' },
-  { id: 'golden', label: 'Bảng Vàng',    icon: <Trophy className="w-4 h-4" />,          emoji: '🏆' },
-  { id: 'debt',   label: 'Công Nợ',      icon: <Search className="w-4 h-4" />,          emoji: '🔍' },
+  { id: 'menu',   label: 'Thực Đơn',  icon: <UtensilsCrossed className="w-4 h-4" />, emoji: '🥖' },
+  { id: 'golden', label: 'Bảng Vàng', icon: <Trophy className="w-4 h-4" />,          emoji: '🏆' },
+  { id: 'debt',   label: 'Công Nợ',   icon: <Search className="w-4 h-4" />,          emoji: '🔍' },
 ]
+
+// ── Skeleton placeholder cho tab content khi loading
+function TabContentSkeleton() {
+  return (
+    <div className="container mx-auto px-4 py-12">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        {Array.from({ length: 8 }).map((_, i) => (
+          <div key={i} className="h-64 rounded-2xl bg-muted/40 animate-pulse" />
+        ))}
+      </div>
+    </div>
+  )
+}
 
 function BanhMiApp() {
   const [cartOpen, setCartOpen] = useState(false)
@@ -32,42 +90,57 @@ function BanhMiApp() {
   const [buyNowItem, setBuyNowItem] = useState<BuyNowItem | null>(null)
   const [activeTab, setActiveTab] = useState<Tab>('menu')
 
-  const handleCheckout = () => {
+  // useTransition để không block UI khi chuyển tab (giảm TBT)
+  const [, startTransition] = useTransition()
+
+  const handleTabChange = useCallback((tab: Tab) => {
+    startTransition(() => {
+      setActiveTab(tab)
+    })
+  }, [])
+
+  const handleCheckout = useCallback(() => {
     setBuyNowItem(null)
     setCartOpen(false)
     setCheckoutOpen(true)
-  }
+  }, [])
 
-  const handleBuyNow = (item: MenuItem, toppings: Topping[], notes?: string) => {
+  const handleBuyNow = useCallback((item: MenuItem, toppings: Topping[], notes?: string) => {
     setBuyNowItem({ menuItem: item, selectedToppings: toppings, notes })
     setCartOpen(false)
     setCheckoutOpen(true)
-  }
+  }, [])
 
-  const handleCloseCheckout = () => {
+  const handleCloseCheckout = useCallback(() => {
     setCheckoutOpen(false)
     setBuyNowItem(null)
-  }
+  }, [])
+
+  const handleOrderClick = useCallback(() => {
+    handleTabChange('menu')
+    const menuEl = document.getElementById('menu')
+    if (menuEl) {
+      menuEl.scrollIntoView({ behavior: 'smooth' })
+    }
+  }, [handleTabChange])
+
+  const handleOpenCart = useCallback(() => setCartOpen(true), [])
+  const handleCloseCart = useCallback(() => setCartOpen(false), [])
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
-      {/* 🏆 Thanh Marquee Chữ Chạy Ngang Trên Cùng */}
+      {/* 🏆 Marquee – lazy loaded sau khi hydrate */}
       <TopMarquee />
 
-      <Header onCartClick={() => setCartOpen(true)} />
+      <Header onCartClick={handleOpenCart} />
 
       <main className="flex-1">
+        {/* Above-the-fold: static import, render ngay */}
         <BanhMiComboLanding
           bannerSrc="/banner_combo.webp"
           comboStartingPrice="19.000đ"
           freeshipCode="FREESHIPCOMBO"
-          onOrderClick={() => {
-            setActiveTab('menu')
-            const menuEl = document.getElementById('menu')
-            if (menuEl) {
-              menuEl.scrollIntoView({ behavior: 'smooth' })
-            }
-          }}
+          onOrderClick={handleOrderClick}
           onOpenLeaderboard={() => setLeaderboardOpen(true)}
         />
 
@@ -83,7 +156,7 @@ function BanhMiApp() {
                 return (
                   <button
                     key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
+                    onClick={() => handleTabChange(tab.id)}
                     aria-selected={isActive}
                     className={[
                       'relative flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 outline-none select-none whitespace-nowrap',
@@ -105,7 +178,7 @@ function BanhMiApp() {
           </div>
         </div>
 
-        {/* ── Tab Content ── */}
+        {/* ── Tab Content – dynamic, lazy loaded ── */}
         <div>
           {activeTab === 'menu'   && <MenuSection onBuyNow={handleBuyNow} />}
           {activeTab === 'golden' && <GoldenBoard />}
@@ -113,28 +186,35 @@ function BanhMiApp() {
         </div>
       </main>
 
+      {/* Footer – lazy loaded, cuối trang */}
       <Footer />
 
-      {/* Chatbot floating */}
+      {/* Chatbot floating – chỉ render sau khi page load xong */}
       <ChatBot />
 
-      <CartSidebar
-        open={cartOpen}
-        onClose={() => setCartOpen(false)}
-        onCheckout={handleCheckout}
-      />
+      {/* Modals / Drawers – chỉ mount khi cần */}
+      {cartOpen && (
+        <CartSidebar
+          open={cartOpen}
+          onClose={handleCloseCart}
+          onCheckout={handleCheckout}
+        />
+      )}
 
-      <CheckoutDialog
-        open={checkoutOpen}
-        onClose={handleCloseCheckout}
-        buyNowItem={buyNowItem}
-      />
+      {checkoutOpen && (
+        <CheckoutDialog
+          open={checkoutOpen}
+          onClose={handleCloseCheckout}
+          buyNowItem={buyNowItem}
+        />
+      )}
 
-      {/* 👑 Modal Xem Bảng Đại Gia */}
-      <LeaderboardModal
-        isOpen={leaderboardOpen}
-        onClose={() => setLeaderboardOpen(false)}
-      />
+      {leaderboardOpen && (
+        <LeaderboardModal
+          isOpen={leaderboardOpen}
+          onClose={() => setLeaderboardOpen(false)}
+        />
+      )}
     </div>
   )
 }

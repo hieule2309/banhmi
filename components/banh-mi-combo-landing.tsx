@@ -1,20 +1,24 @@
 'use client'
 
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useRef } from 'react'
 import Image from 'next/image'
+import dynamic from 'next/dynamic'
 import {
   Flame,
   ShoppingBag,
   Sparkles,
   X,
-  Copy,
-  Check,
   ArrowRight,
-  Gift,
   Clock,
   ShieldCheck,
   Percent,
 } from 'lucide-react'
+
+// ExitIntentModal – lazy loaded, chỉ parse JS khi user có ý định thoát
+const ExitIntentModal = dynamic(
+  () => import('./exit-intent-modal').then(m => ({ default: m.ExitIntentModal })),
+  { ssr: false }
+)
 
 interface BanhMiComboLandingProps {
   /** Path to the combo banner image (default: /banner_combo.webp) */
@@ -55,9 +59,8 @@ export function BanhMiComboLanding({
   const [showStickyBar, setShowStickyBar] = useState(false)
   const [isStickyDismissed, setIsStickyDismissed] = useState(false)
 
-  // ── State 2: Exit-Intent Modal visibility
+  // ── State 2: Exit-Intent Modal visibility (deferred load)
   const [showExitModal, setShowExitModal] = useState(false)
-  const [isCopied, setIsCopied] = useState(false)
 
   // Smooth scroll or trigger order action
   const handleScrollToMenu = useCallback(() => {
@@ -75,64 +78,68 @@ export function BanhMiComboLanding({
 
   // ────────────────────────────────────────────────────────────
   // FEATURE 2: Sticky Top Bar on Scroll (> 300px)
+  // Debounced với requestAnimationFrame để tránh block main thread
   // ────────────────────────────────────────────────────────────
   useEffect(() => {
+    let rafId: number | null = null
+
     const handleScroll = () => {
-      if (window.scrollY > 300) {
-        setShowStickyBar(true)
-      } else {
-        setShowStickyBar(false)
-      }
+      // Dùng RAF thay vì chạy setState trực tiếp trong scroll handler
+      if (rafId !== null) return
+      rafId = requestAnimationFrame(() => {
+        setShowStickyBar(window.scrollY > 300)
+        rafId = null
+      })
     }
 
     window.addEventListener('scroll', handleScroll, { passive: true })
-    return () => window.removeEventListener('scroll', handleScroll)
+    return () => {
+      window.removeEventListener('scroll', handleScroll)
+      if (rafId !== null) cancelAnimationFrame(rafId)
+    }
   }, [])
 
   // ────────────────────────────────────────────────────────────
-  // FEATURE 3: Exit-Intent Trigger with Cookie & Session Check
+  // FEATURE 3: Exit-Intent Trigger – defer setup 2s sau khi mount
+  // Không setup ngay để tránh block main thread khi trang đang load
   // ────────────────────────────────────────────────────────────
   useEffect(() => {
-    const handleMouseLeave = (e: MouseEvent) => {
-      // Trigger when mouse moves past the top of viewport (trying to close tab / switch address bar)
-      if (e.clientY <= 0 || (e.relatedTarget === null && e.clientY <= 10)) {
-        // 1. Check Cookie: if "has_order" exists -> DO NOT show modal
-        const hasOrderCookie = getCookie('has_order')
-        if (hasOrderCookie) {
-          return
-        }
+    let timer: ReturnType<typeof setTimeout>
 
-        // 2. Check SessionStorage: only trigger ONCE per session to prevent spamming
-        const hasTriggeredInSession = sessionStorage.getItem('has_shown_exit_intent')
-        if (hasTriggeredInSession) {
-          return
-        }
+    const setup = () => {
+      const handleMouseLeave = (e: MouseEvent) => {
+        if (e.clientY <= 0 || (e.relatedTarget === null && e.clientY <= 10)) {
+          const hasOrderCookie = getCookie('has_order')
+          if (hasOrderCookie) return
 
-        // 3. Show Exit Intent Modal
-        sessionStorage.setItem('has_shown_exit_intent', 'true')
-        setShowExitModal(true)
+          const hasTriggeredInSession = sessionStorage.getItem('has_shown_exit_intent')
+          if (hasTriggeredInSession) return
+
+          sessionStorage.setItem('has_shown_exit_intent', 'true')
+          setShowExitModal(true)
+        }
       }
+
+      document.addEventListener('mouseleave', handleMouseLeave)
+      return () => document.removeEventListener('mouseleave', handleMouseLeave)
     }
 
-    document.addEventListener('mouseleave', handleMouseLeave)
-    return () => document.removeEventListener('mouseleave', handleMouseLeave)
+    // Delay 2s để không block main thread lúc trang vừa load
+    let cleanup: (() => void) | undefined
+    timer = setTimeout(() => {
+      cleanup = setup()
+    }, 2000)
+
+    return () => {
+      clearTimeout(timer)
+      cleanup?.()
+    }
   }, [])
 
-  // Copy discount voucher code
-  const handleCopyCode = () => {
-    if (typeof navigator !== 'undefined' && navigator.clipboard) {
-      navigator.clipboard.writeText(freeshipCode)
-      setIsCopied(true)
-      setTimeout(() => setIsCopied(false), 2500)
-    }
-  }
-
-  // Claim voucher and jump to order
-  const handleClaimVoucherAndOrder = () => {
-    handleCopyCode()
+  const handleClaimVoucherAndOrder = useCallback(() => {
     setShowExitModal(false)
     handleScrollToMenu()
-  }
+  }, [handleScrollToMenu])
 
   return (
     <>
@@ -297,97 +304,15 @@ export function BanhMiComboLanding({
       </section>
 
       {/* ────────────────────────────────────────────────────────
-          FEATURE 3: EXIT-INTENT MODAL (With Cookie & Session Check)
+          FEATURE 3: EXIT-INTENT MODAL – lazy loaded chunk
+          Chỉ render khi user có ý định thoát, không parse JS sớm
           ──────────────────────────────────────────────────────── */}
       {showExitModal && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in duration-200"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) setShowExitModal(false)
-          }}
-        >
-          <div className="relative w-full max-w-md bg-card border-2 border-orange-500/30 rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
-            
-            {/* Modal Top Header with Gradient */}
-            <div className="bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 p-6 text-white text-center relative">
-              {/* Close Button "X" */}
-              <button
-                type="button"
-                onClick={() => setShowExitModal(false)}
-                className="absolute top-4 right-4 text-white/80 hover:text-white bg-black/20 hover:bg-black/30 p-1.5 rounded-full transition-colors"
-                aria-label="Đóng cửa sổ"
-              >
-                <X className="w-5 h-5" />
-              </button>
-
-              <div className="w-14 h-14 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center mx-auto mb-3 text-3xl shadow-md">
-                🎁
-              </div>
-
-              <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight leading-snug">
-                Khoan đã! Tặng bạn mã freeship cho Combo Bánh mì + Nước nè!
-              </h2>
-            </div>
-
-            {/* Modal Body */}
-            <div className="p-6 space-y-5 text-center">
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                Đừng bỏ lỡ bữa ăn ngon miệng hôm nay! Áp dụng ngay mã ưu đãi để nhận <strong className="text-foreground">Freeship 100%</strong> cho đơn hàng Combo của bạn.
-              </p>
-
-              {/* Voucher Code Box */}
-              <div className="flex items-center justify-between gap-2 p-3 bg-muted/60 border-2 border-dashed border-orange-500/40 rounded-2xl">
-                <div className="flex items-center gap-2 pl-2">
-                  <Gift className="w-4 h-4 text-orange-500 shrink-0" />
-                  <span className="font-mono font-black text-base sm:text-lg text-orange-600 dark:text-orange-400 tracking-wider">
-                    {freeshipCode}
-                  </span>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={handleCopyCode}
-                  className="bg-orange-500 hover:bg-orange-600 text-white font-bold text-xs px-3.5 py-2 rounded-xl transition-all shadow-xs flex items-center gap-1.5 shrink-0"
-                >
-                  {isCopied ? (
-                    <>
-                      <Check className="w-3.5 h-3.5 text-white" />
-                      <span>Đã chép!</span>
-                    </>
-                  ) : (
-                    <>
-                      <Copy className="w-3.5 h-3.5" />
-                      <span>Sao chép</span>
-                    </>
-                  )}
-                </button>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="space-y-2 pt-1">
-                <button
-                  type="button"
-                  onClick={handleClaimVoucherAndOrder}
-                  className="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 hover:from-amber-600 hover:via-orange-600 hover:to-rose-600 text-white font-black text-sm sm:text-base shadow-lg shadow-orange-500/25 hover:shadow-orange-500/40 transition-all flex items-center justify-center gap-2"
-                >
-                  <Sparkles className="w-4 h-4" />
-                  <span>Nhận Mã Ngay & Đặt Hàng</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setShowExitModal(false)}
-                  className="text-xs text-muted-foreground hover:text-foreground font-medium py-1 transition-colors"
-                >
-                  Không, cảm ơn • Tôi muốn xem tiếp
-                </button>
-              </div>
-            </div>
-
-          </div>
-        </div>
+        <ExitIntentModal
+          freeshipCode={freeshipCode}
+          onClose={() => setShowExitModal(false)}
+          onClaim={handleClaimVoucherAndOrder}
+        />
       )}
     </>
   )

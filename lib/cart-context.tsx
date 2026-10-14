@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useState, type ReactNode } from 'react'
+import { createContext, useContext, useState, useCallback, useMemo, type ReactNode } from 'react'
 import type { CartItem, MenuItem, Topping } from './types'
 
 interface CartContextType {
@@ -18,7 +18,9 @@ const CartContext = createContext<CartContextType | undefined>(undefined)
 export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([])
 
-  const addItem = (menuItem: MenuItem, toppings: Topping[], notes?: string) => {
+  // Dùng useCallback để các function không bị tạo mới mỗi render
+  // -> tránh re-render toàn bộ consumers của CartContext
+  const addItem = useCallback((menuItem: MenuItem, toppings: Topping[], notes?: string) => {
     setItems((prev) => [
       ...prev,
       {
@@ -28,47 +30,60 @@ export function CartProvider({ children }: { children: ReactNode }) {
         notes,
       },
     ])
-  }
+  }, [])
 
-  const removeItem = (index: number) => {
+  const removeItem = useCallback((index: number) => {
     setItems((prev) => prev.filter((_, i) => i !== index))
-  }
+  }, [])
 
-  const updateQuantity = (index: number, quantity: number) => {
+  const updateQuantity = useCallback((index: number, quantity: number) => {
     if (quantity <= 0) {
-      removeItem(index)
+      setItems((prev) => prev.filter((_, i) => i !== index))
       return
     }
     setItems((prev) =>
       prev.map((item, i) => (i === index ? { ...item, quantity } : item))
     )
-  }
+  }, [])
 
-  const clearCart = () => {
+  const clearCart = useCallback(() => {
     setItems([])
-  }
+  }, [])
 
-  const totalItems = items.reduce((sum, item) => sum + item.quantity, 0)
+  // useMemo để computed values không recalc khi render không liên quan
+  const totalItems = useMemo(
+    () => items.reduce((sum, item) => sum + item.quantity, 0),
+    [items]
+  )
 
-  const totalPrice = items.reduce((sum, item) => {
-    const itemPrice =
-      item.menuItem.price +
-      item.selectedToppings.reduce((t, topping) => t + topping.price, 0)
-    return sum + itemPrice * item.quantity
-  }, 0)
+  const totalPrice = useMemo(
+    () =>
+      items.reduce((sum, item) => {
+        const itemPrice =
+          item.menuItem.price +
+          item.selectedToppings.reduce((t, topping) => t + topping.price, 0)
+        return sum + itemPrice * item.quantity
+      }, 0),
+    [items]
+  )
+
+  // useMemo cho context value để tránh tạo object mới mỗi render
+  // -> chỉ re-render consumers khi items thực sự thay đổi
+  const contextValue = useMemo(
+    () => ({
+      items,
+      addItem,
+      removeItem,
+      updateQuantity,
+      clearCart,
+      totalItems,
+      totalPrice,
+    }),
+    [items, addItem, removeItem, updateQuantity, clearCart, totalItems, totalPrice]
+  )
 
   return (
-    <CartContext.Provider
-      value={{
-        items,
-        addItem,
-        removeItem,
-        updateQuantity,
-        clearCart,
-        totalItems,
-        totalPrice,
-      }}
-    >
+    <CartContext.Provider value={contextValue}>
       {children}
     </CartContext.Provider>
   )

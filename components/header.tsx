@@ -3,7 +3,7 @@
 import { ShoppingCart, Menu, X, Package, LayoutDashboard } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useCart } from '@/lib/cart-context'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 
 interface HeaderProps {
@@ -16,23 +16,28 @@ export function Header({ onCartClick }: HeaderProps) {
   const [hasOrder, setHasOrder] = useState(false)
   const [orderCount, setOrderCount] = useState(0)
 
-  useEffect(() => {
-    const checkOrder = () => {
-      fetch('/api/orders/check')
-        .then(r => r.json())
-        .then(d => {
-          const active: any[] = d.activeOrders || []
-          setHasOrder(active.length > 0)
-          setOrderCount(active.length)
-        })
-        .catch(() => {})
-    }
+  const checkOrder = useCallback(() => {
+    fetch('/api/orders/check')
+      .then(r => r.json())
+      .then(d => {
+        const active: any[] = d.activeOrders || []
+        setHasOrder(active.length > 0)
+        setOrderCount(active.length)
+      })
+      .catch(() => {})
+  }, [])
 
-    checkOrder()
+  useEffect(() => {
+    // Delay 1.5s để không cạnh tranh network với LCP image fetch
+    const timer = setTimeout(checkOrder, 1500)
 
     window.addEventListener('order-placed', checkOrder)
-    return () => window.removeEventListener('order-placed', checkOrder)
-  }, [])
+    return () => {
+      clearTimeout(timer)
+      window.removeEventListener('order-placed', checkOrder)
+    }
+  }, [checkOrder])
+
 
   return (
     <header className="sticky top-0 z-50 bg-card/95 backdrop-blur-sm border-b border-border">
