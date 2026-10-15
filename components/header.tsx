@@ -56,7 +56,7 @@ export function Header({ onCartClick }: HeaderProps) {
           <div className="flex items-center gap-2">
             <Link href="/admin" className="text-primary hover:underline font-semibold flex items-center gap-1.5">
               <LayoutDashboard className="w-4 h-4" />
-              Đừng bấm vào đây 😢😢😢
+              {/* Đừng bấm vào đây 😢😢😢 */}
             </Link>
 
             {hasOrder && (
@@ -108,7 +108,7 @@ export function Header({ onCartClick }: HeaderProps) {
                 onClick={() => setMobileMenuOpen(false)}
               >
                 <LayoutDashboard className="w-4 h-4" />
-                Đừng bấm vào đây 😢😢😢
+                {/* Đừng bấm vào đây 😢😢😢 */}
               </Link>
             </div>
           </nav>
